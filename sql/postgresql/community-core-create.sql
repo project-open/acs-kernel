@@ -315,7 +315,7 @@ begin
   if party_id = -1 then
    return ''The Public'';
   else
-   return null;
+   return email from parties where party_id = party_id;
   end if;
   
 end;' language 'plpgsql' immutable strict;

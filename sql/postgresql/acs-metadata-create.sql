@@ -12,8 +12,7 @@
 --
 -- @creation-date 2000-05-18
 --
--- @cvs-id acs-metadata-create.sql,v 1.9.2.8 2001/01/22 20:23:46 mbryzek Exp
---
+-- @cvs-id $Id$
 
 -- ******************************************************************
 -- * KNOWLEDGE LEVEL
@@ -23,12 +22,7 @@
 -- OBJECT TYPES --
 ------------------
 
--- DRB: As originally defined two types couldn't share an attribute
--- table, which seems stupid.  Why in the world should I be forbidden
--- to define two types inherited from two different parent types (specifically
--- content_revision and image) and to extend them with the same attributes
--- table?  
-
+-- DRB: null table name change
 create table acs_object_types (
 	object_type	varchar(1000) not null
 			constraint acs_object_types_pk primary key,
@@ -41,15 +35,18 @@ create table acs_object_types (
 	pretty_plural	varchar(1000) not null
 			constraint acs_obj_types_pretty_plural_un
 			unique,
-	table_name	varchar(30) not null
+	table_name	varchar(30)
                         constraint acs_object_types_table_name_un unique,
-	id_column	varchar(30) not null,
+	id_column	varchar(30),
 	package_name	varchar(30) not null
 			constraint acs_object_types_pkg_name_un unique,
 	name_method	varchar(100),
 	type_extension_table varchar(30),
         dynamic_p       boolean default 'f',
-        tree_sortkey    varbit
+        tree_sortkey    varbit,
+	constraint acs_object_types_table_id_name_ck
+	check ((table_name is null and id_column is null) or
+               (table_name is not null and id_column is not null))
 );
 
 create index acs_obj_types_supertype_idx on acs_object_types (supertype);
@@ -266,9 +263,9 @@ comment on column acs_object_type_tables.id_column is '
 
 create table acs_datatypes (
 	datatype	varchar(50) not null
-			constraint acs_datatypes_pk primary key,
+			constraint acs_datatypes_datatype_pk primary key,
 	max_n_values	integer default 1
-			constraint acs_datatypes_max_n_ck
+			constraint acs_datatypes_max_n_values_ck
 			check (max_n_values > 0)
 );
 
@@ -367,7 +364,7 @@ select nextval('t_acs_attribute_id_seq') as nextval;
 
 create table acs_attributes (
 	attribute_id	integer not null
-			constraint acs_attributes_pk
+			constraint acs_attributes_attribute_id_pk
 			primary key,
 	object_type	varchar(100) not null
 			constraint acs_attributes_object_type_fk
@@ -385,10 +382,10 @@ create table acs_attributes (
 			references acs_datatypes (datatype),
 	default_value	text,
 	min_n_values	integer default 1 not null
-			constraint acs_attributes_min_n_ck
+			constraint acs_attributes_min_n_values_ck
 			check (min_n_values >= 0),
 	max_n_values	integer default 1 not null
-			constraint acs_attributes_max_n_ck
+			constraint acs_attributes_max_n_values_ck
 			check (max_n_values >= 0),
 	storage 	varchar(13) default 'type_specific'
 			constraint acs_attributes_storage_ck
@@ -516,6 +513,7 @@ where attr.object_type = all_types.ancestor_type;
 -- METADATA PACKAGES --
 -----------------------
 
+-- DRB: null table_name change
 create function acs_object_type__create_type (varchar,varchar,varchar,varchar,varchar,varchar,varchar,boolean,varchar,varchar)
 returns integer as '
 declare
@@ -523,8 +521,8 @@ declare
   create_type__pretty_name            alias for $2;  
   create_type__pretty_plural          alias for $3;  
   create_type__supertype              alias for $4;  
-  create_type__table_name             alias for $5;  
-  create_type__id_column              alias for $6;  -- default ''XXX''
+  create_type__table_name             alias for $5;  -- default null
+  create_type__id_column              alias for $6;  -- default null
   create_type__package_name           alias for $7;  -- default null
   create_type__abstract_p             alias for $8;  -- default ''f''
   create_type__type_extension_table   alias for $9;  -- default null
@@ -576,8 +574,17 @@ declare
   drop_type__object_type            alias for $1;  
   drop_type__cascade_p              alias for $2;  -- default ''f''
   row                               record;
+  object_row                        record;
 begin
-    -- XXX: drop_type cascade_p is ignored (ignored in oracle too, but defaults f)
+
+   if drop_type__cascade_p then
+     for object_row in select object_id
+                         from acs_objects
+                         where object_type = drop_type__object_type
+     loop
+       PERFORM acs_object__delete (object_row.object_id);
+     end loop;
+   end if;
 
     -- drop all the attributes associated with this type
     for row in select attribute_name 
@@ -674,7 +681,7 @@ begin
       v_sort_order := create_attribute__sort_order;
     end if;
 
-    select acs_attribute_id_seq.nextval into v_attribute_id;
+    select acs_attribute_id_seq.nextval from dual into v_attribute_id;
 
     insert into acs_attributes
       (attribute_id, object_type, table_name, column_name, attribute_name,
@@ -682,6 +689,55 @@ begin
        min_n_values, max_n_values, storage, static_p)
     values
       (v_attribute_id, create_attribute__object_type, 
+       create_attribute__table_name, create_attribute__column_name, 
+       create_attribute__attribute_name, create_attribute__pretty_name,
+       create_attribute__pretty_plural, v_sort_order, 
+       create_attribute__datatype, create_attribute__default_value,
+       create_attribute__min_n_values, create_attribute__max_n_values, 
+       create_attribute__storage, create_attribute__static_p);
+
+    return v_attribute_id;
+   
+end;' language 'plpgsql';
+
+-- create or replace package body acs_attribute
+-- function create_attribute
+create function acs_attribute__create_attribute (integer,varchar,varchar,varchar,varchar,varchar,varchar,varchar,varchar,integer,integer,integer,varchar,boolean)
+returns integer as '
+declare
+  create_attribute__attribute_id           alias for $1;  
+  create_attribute__object_type            alias for $2;  
+  create_attribute__attribute_name         alias for $3;  
+  create_attribute__datatype               alias for $4;  
+  create_attribute__pretty_name            alias for $5;  
+  create_attribute__pretty_plural          alias for $6;  -- default null
+  create_attribute__table_name             alias for $7;  -- default null
+  create_attribute__column_name            alias for $8;  -- default null
+  create_attribute__default_value          alias for $9;  -- default null
+  create_attribute__min_n_values           alias for $10;  -- default 1
+  create_attribute__max_n_values           alias for $11; -- default 1
+  create_attribute__sort_order             alias for $12; -- default null
+  create_attribute__storage                alias for $13; -- default ''type_specific''
+  create_attribute__static_p               alias for $14; -- default ''f''
+
+  v_sort_order           acs_attributes.sort_order%TYPE;
+
+begin
+    if create_attribute__sort_order is null then
+      select coalesce(max(sort_order), 1) into v_sort_order
+      from acs_attributes
+      where object_type = create_attribute__object_type
+      and attribute_name = create_attribute__attribute_name;
+    else
+      v_sort_order := create_attribute__sort_order;
+    end if;
+
+    insert into acs_attributes
+      (attribute_id, object_type, table_name, column_name, attribute_name,
+       pretty_name, pretty_plural, sort_order, datatype, default_value,
+       min_n_values, max_n_values, storage, static_p)
+    values
+      (create_attribute__attribute_id, create_attribute__object_type, 
        create_attribute__table_name, create_attribute__column_name, 
        create_attribute__attribute_name, create_attribute__pretty_name,
        create_attribute__pretty_plural, v_sort_order, 

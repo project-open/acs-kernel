@@ -10,7 +10,7 @@
 --
 -- @creation-date 2000-08-13
 --
--- @cvs-id acs-permissions-create.sql,v 1.10.2.2 2001/01/12 22:59:20 oumi Exp
+-- @cvs-id $Id$
 --
 
 
@@ -19,7 +19,7 @@
 ---------------------------------------------
 
 create table acs_privileges (
-	privilege	varchar(100) not null constraint acs_privileges_pk
+	privilege	varchar(100) not null constraint acs_privileges_privilege_pk
 			primary key,
 	pretty_name	varchar(100),
 	pretty_plural	varchar(100)
@@ -335,14 +335,17 @@ end;' language 'plpgsql';
 
 create table acs_permissions (
 	object_id		integer not null
-				constraint acs_permissions_on_what_id_fk
-				references acs_objects (object_id),
+				constraint acs_permissions_object_id_fk
+				references acs_objects (object_id)
+                                on delete cascade,
 	grantee_id		integer not null
 				constraint acs_permissions_grantee_id_fk
-				references parties (party_id),
+				references parties (party_id)
+                                on delete cascade,
 	privilege		varchar(100) not null 
-                                constraint acs_permissions_priv_fk
-				references acs_privileges (privilege),
+                                constraint acs_permissions_privilege_fk
+				references acs_privileges (privilege)
+                                on delete cascade,
 	constraint acs_permissions_pk
 	primary key (object_id, grantee_id, privilege)
 );

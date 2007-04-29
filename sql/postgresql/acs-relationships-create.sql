@@ -7,7 +7,7 @@
 --
 -- @author rhs@mit.edu
 --
--- @cvs-id acs-relationships-create.sql,v 1.7.2.2 2001/01/12 23:03:26 mbryzek Exp
+-- @cvs-id $Id$
 --
 
 ----------------------------------------------------------------
@@ -16,20 +16,20 @@
 
 create table acs_rel_roles (
 	role		varchar(100) not null
-			constraint acs_rel_roles_pk primary key,
+			constraint acs_rel_roles_role_pk primary key,
         pretty_name	varchar(100) not null,
         pretty_plural	varchar(100) not null
 );
 
 create table acs_rel_types (
 	rel_type	varchar(100) not null
-			constraint acs_rel_types_pk primary key
+			constraint acs_rel_types_rel_type_pk primary key
 			constraint acs_rel_types_rel_type_fk
 			references acs_object_types(object_type),
 	object_type_one	varchar(100) not null
 			constraint acs_rel_types_obj_type_1_fk
 			references acs_object_types (object_type),
-	role_one	varchar(100) constraint acs_rel_types_role_1_fk
+	role_one	varchar(100) constraint acs_rel_types_role_one_fk
 			references acs_rel_roles (role),
 	min_n_rels_one	integer default 0 not null
 			constraint acs_rel_types_min_n_1_ck
@@ -40,7 +40,7 @@ create table acs_rel_types (
 	object_type_two	varchar(100) not null
 			constraint acs_rel_types_obj_type_2_fk
 			references acs_object_types (object_type),
-	role_two	varchar(100) constraint acs_rel_types_role_2_fk
+	role_two	varchar(100) constraint acs_rel_types_role_two_fk
 			references acs_rel_roles (role),
 	min_n_rels_two	integer default 0 not null
 			constraint acs_rel_types_min_n_2_ck
@@ -322,16 +322,19 @@ create table acs_rels (
 	rel_id		integer not null
 			constraint acs_rels_rel_id_fk
 			references acs_objects (object_id)
-			constraint acs_rels_pk primary key,
+                        on delete cascade
+			constraint acs_rels_rel_id_pk primary key,
 	rel_type	varchar(100) not null
 			constraint acs_rels_rel_type_fk
 			references acs_rel_types (rel_type),
 	object_id_one	integer not null
-			constraint acs_object_rels_one_fk
-			references acs_objects (object_id),
+			constraint acs_rels_object_id_one_fk
+			references acs_objects (object_id)
+                        on delete cascade,
 	object_id_two	integer not null
-			constraint acs_object_rels_two_fk
-			references acs_objects (object_id),
+			constraint acs_rels_object_id_two_fk
+			references acs_objects (object_id)
+                        on delete cascade,
 	constraint acs_object_rels_un unique
 	(rel_type, object_id_one, object_id_two)
 );
@@ -356,6 +359,32 @@ comment on table acs_rels is '
  storage in the acs_rels table. This would parallel what we do with
  acs_attributes.
 ';
+
+
+----------------------------
+-- Application Data Links --
+----------------------------
+
+create sequence acs_data_links_seq start with 1;
+
+create table acs_data_links (
+        rel_id          integer not null
+                        constraint acs_data_links_rel_id_pk primary key,
+        object_id_one   integer not null
+                        constraint acs_data_links_obj_one_fk
+                        references acs_objects (object_id)
+                        on delete cascade,
+        object_id_two   integer not null
+                        constraint acs_data_links_obj_two_fk
+                        references acs_objects (object_id)
+                        on delete cascade,
+        constraint acs_data_links_un unique
+        (object_id_one, object_id_two)
+);
+
+create index acs_data_links_id_one_idx on acs_data_links (object_id_one);
+create index acs_data_links_id_two_idx on acs_data_links (object_id_two);
+
 
 --------------
 -- TRIGGERS --
@@ -442,6 +471,8 @@ for each row execute procedure acs_rels_in_tr ();
 
 -- create or replace package body acs_rel
 -- function new
+
+select define_function_args('acs_rel__new','rel_id,rel_type,object_id_one,object_id_two,context_id,creation_user,creation_ip');
 create function acs_rel__new (integer,varchar,integer,integer,integer,integer,varchar)
 returns integer as '
 declare
@@ -462,7 +493,10 @@ begin
       now(),
       creation_user,
       creation_ip,
-      context_id
+      context_id,
+      ''t'',
+      new__rel_type || '': '' || new__object_id_one || '' - '' || new__object_id_two,
+      null
     );
 
     insert into acs_rels

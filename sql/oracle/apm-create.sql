@@ -18,15 +18,15 @@
 
 create table apm_package_types (
     package_key			varchar2(100)
-				constraint apm_package_types_p_key_pk primary key,
+				constraint apm_package_types_pkg_key_pk primary key,
     pretty_name			varchar(100)
     	    	    	    	constraint apm_package_types_pretty_n_nn not null
 				constraint apm_package_types_pretty_n_un unique,
     pretty_plural	        varchar2(100)
 				constraint apm_package_types_pretty_pl_un unique,
     package_uri			varchar2(1500)
-				constraint apm_packages_types_p_uri_nn not null
-				constraint apm_packages_types_p_uri_un unique,
+				constraint apm_packages_types_pkg_uri_nn not null
+				constraint apm_packages_types_pkg_uri_un unique,
     package_type		varchar2(300)
 				constraint apm_packages_pack_type_ck 
 				check (package_type in ('apm_application', 'apm_service')),
@@ -84,7 +84,7 @@ begin
    object_type => 'apm_package',
    pretty_name => 'Package',
    pretty_plural => 'Packages',
-   table_name => 'APM_PACKAGES',
+   table_name => 'apm_packages',
    id_column => 'package_id',
    package_name => 'apm_package',
    type_extension_table => 'apm_package_types',
@@ -106,46 +106,6 @@ begin
    pretty_plural => 'Package Keys'
  );
 
- attr_id := acs_attribute.create_attribute(
-   object_type => 'apm_package',
-   attribute_name => 'package_uri',
-   datatype => 'string',
-   pretty_name => 'Package URI',
-   pretty_plural => 'Package URIs'
- );
-
- attr_id := acs_attribute.create_attribute(
-   object_type => 'apm_package',
-   attribute_name => 'spec_file_path',
-   datatype => 'string',
-   pretty_name => 'Specification File Path',
-   pretty_plural => 'Specification File Paths'
- );
-
- attr_id := acs_attribute.create_attribute(
-   object_type => 'apm_package',
-   attribute_name => 'spec_file_mtime',
-   datatype => 'number',
-   pretty_name => 'Specification File Modified Time',
-   pretty_plural => 'Specification File Modified Times'
- );
-
- attr_id := acs_attribute.create_attribute(
-   object_type => 'apm_package',
-   attribute_name => 'singleton_p',
-   datatype => 'boolean',
-   pretty_name => 'Singleton',
-   pretty_plural => 'Singletons'
- ); 
-
- attr_id := acs_attribute.create_attribute(
-   object_type => 'apm_package',
-   attribute_name => 'initial_install_p',
-   datatype => 'boolean',
-   pretty_name => 'Initial Install',
-   pretty_plural => 'Initial Installs'
- ); 
-
 end;
 /
 show errors;
@@ -153,17 +113,20 @@ show errors;
 create table apm_packages (
     package_id			constraint apm_packages_package_id_fk
 				references acs_objects(object_id)
-				constraint apm_packages_pack_id_pk primary key,
+				constraint apm_packages_package_id_pk primary key,
     package_key			constraint apm_packages_package_key_fk
 				references apm_package_types(package_key),
     instance_name		varchar2(300)
-			        constraint apm_packages_inst_name_nn not null,
+			        constraint apm_packages_instance_name_nn not null,
     -- default system locale for this package
     default_locale              varchar2(30)
 );
 
 -- create bitmap index apm_packages_package_key_idx on apm_packages (package_key);
 create index apm_packages_package_key_idx on apm_packages (package_key);
+
+-- This cant be added at table create time since acs_objects is created before apm_packages;
+alter table acs_objects add constraint acs_objects_package_id_fk foreign key (package_id) references apm_packages(package_id) on delete set null;
 
 comment on table apm_packages is '
    This table maintains the list of all package instances in the sytem. 
@@ -352,6 +315,23 @@ comment on column apm_package_versions.auto_mount is '
  such as general-comments and notifications.
 ';
 
+-- Use this table to make it easy to change the attribute set of package versions
+-- TODO: Migrate this to use acs_attributes instead?
+create table apm_package_version_attr (
+    version_id         integer
+                       constraint apm_package_vers_attr_vid_fk
+                       references apm_package_versions(version_id)
+                       on delete cascade
+                       constraint apm_package_vers_attr_vid_nn
+                       not null,
+    attribute_name     varchar(100)
+                       constraint apm_package_vers_attr_an_nn
+                       not null,
+    attribute_value    varchar(4000),
+    constraint apm_package_vers_attr_pk
+    primary key (version_id, attribute_name)
+);
+
 -- Metadata for the apm_package_versions object.
 
 declare
@@ -362,9 +342,9 @@ begin
    object_type => 'apm_package_version',
    pretty_name => 'Package Version',
    pretty_plural => 'Package Versions',
-   table_name => 'APM_PACKAGE_VERSIONS',
+   table_name => 'apm_package_versions',
    id_column => 'version_id',
-   package_name => 'APM_PACKAGE_VERSION'
+   package_name => 'apm_package_version'
  );
 
  attr_id := acs_attribute.create_attribute(
@@ -434,7 +414,7 @@ begin
  attr_id := acs_attribute.create_attribute(
    object_type => 'apm_package_version',
    attribute_name => 'enabled_p',
-   datatype => 'string',
+   datatype => 'boolean',
    pretty_name => 'Enabled',
    pretty_plural => 'Enabled'
  );
@@ -450,7 +430,7 @@ begin
  attr_id := acs_attribute.create_attribute(
    object_type => 'apm_package_version',
    attribute_name => 'deactivation_date',
-   datatype => 'string',
+   datatype => 'date',
    pretty_name => 'Deactivation Date',
    pretty_plural => 'Deactivation Dates'
  );
@@ -553,26 +533,29 @@ comment on table apm_package_db_types is '
 ';
 
 create table apm_parameters (
-	parameter_id		constraint apm_parameters_fk 
+	parameter_id		constraint apm_parameters_parameter_id_fk 
 				references acs_objects(object_id)
-			        constraint apm_parameters_pk primary key,
+			        constraint apm_parameters_parameter_id_pk primary key,
 	package_key		varchar2(100)
-				constraint apm_pack_param_pack_key_nn not null 	
-				constraint apm_pack_param_type_fk
+				constraint apm_parameters_package_key_nn not null 	
+				constraint apm_parameters_package_key_fk
 			        references apm_package_types (package_key),
 	parameter_name		varchar2(100) 
 				constraint apm_pack_params_name_nn not null,
         description		varchar2(2000),
 	section_name		varchar2(200),
-	datatype	        varchar2(100) not null
-			        constraint apm_parameter_datatype_ck 
+	datatype	        varchar2(100) 
+				constraint apm_parameters_datatype_nn not null
+			        constraint apm_parameters_datatype_ck 
 				check(datatype in ('number', 'string')),
 	default_value		varchar2(4000),
-	min_n_values		integer default 1 not null
-			        constraint apm_paramters_min_n_ck
+	min_n_values		integer default 1 
+				constraint apm_parameters_min_n_values_nn not null
+			        constraint apm_parameters_min_n_values_ck
 			        check (min_n_values >= 0),
-	max_n_values		integer default 1 not null
-			        constraint apm_paramters_max_n_ck
+	max_n_values		integer default 1 
+				constraint apm_parameters_max_n_values_nn not null
+			        constraint apm_paramaters_max_n_values_ck
 			        check (max_n_values >= 0),
 	constraint apm_paramters_attr_name_un
 	unique (parameter_name, package_key),
@@ -654,7 +637,7 @@ begin
    object_type => 'apm_parameter',
    pretty_name => 'Package Parameter',
    pretty_plural => 'Package Parameters',
-   table_name => 'APM_PARAMETERS',
+   table_name => 'apm_parameters',
    id_column => 'parameter_id',
    package_name => 'apm_parameter'
  );
@@ -703,7 +686,7 @@ begin
  attr_id := acs_attribute.create_attribute(
    object_type => 'apm_parameter',
    attribute_name => 'max_n_values',
-   datatype => 'string',
+   datatype => 'integer',
    pretty_name => 'Maximum Number of Values',
    pretty_plural => 'Maximum Number of Values Settings',
    default_value => 1
@@ -791,9 +774,9 @@ This table records data on all of the applications registered in OpenACS.
 
 create table apm_services (
        service_id			integer
-					constraint services_service_id_fk
+					constraint apm_services_service_id_fk
 					references apm_packages(package_id)
-				        constraint services_pk primary key
+				        constraint apm_services_service_id_pk primary key
 );
 
 comment on table apm_services is '
@@ -1490,7 +1473,8 @@ as
     -- Create the new parameter.    
     v_parameter_id := acs_object.new(
        object_id => parameter_id,
-       object_type => 'apm_parameter'
+       object_type => 'apm_parameter',
+       title => register_parameter.package_key || ': Parameter ' || register_parameter.parameter_name
     );
     
     insert into apm_parameters 
@@ -1541,6 +1525,13 @@ as
             min_n_values   = nvl(update_parameter.min_n_values, min_n_values),
             max_n_values   = nvl(update_parameter.max_n_values, max_n_values)
       where parameter_id = update_parameter.parameter_id;
+
+    update acs_objects
+       set title = (select package_key || ': Parameter ' || parameter_name
+                    from apm_parameters
+                    where parameter_id = update_parameter.parameter_id)
+     where object_id = update_parameter.parameter_id;
+
     return parameter_id;
   end;
 
@@ -1739,20 +1730,26 @@ as
 	  creation_ip => creation_ip,
 	  context_id => context_id
 	 );
+
        if instance_name is null then 
 	 v_instance_name := package_key || ' ' || v_package_id;
        else
 	 v_instance_name := instance_name;
        end if;
 
-       select package_type into v_package_type
-       from apm_package_types
-       where package_key = apm_package.new.package_key;
-
        insert into apm_packages
        (package_id, package_key, instance_name)
        values
        (v_package_id, package_key, v_instance_name);
+
+       update acs_objects
+       set title = v_instance_name,
+           package_id = v_package_id
+       where object_id = v_package_id;
+
+       select package_type into v_package_type
+       from apm_package_types
+       where package_key = apm_package.new.package_key;
 
        if v_package_type = 'apm_application' then
 	   insert into apm_applications
@@ -1945,7 +1942,8 @@ as
       end if;
 	v_version_id := acs_object.new(
 		object_id => v_version_id,
-		object_type => 'apm_package_version'
+		object_type => 'apm_package_version',
+                title => package_key || ', Version ' || version_name
         );
       insert into apm_package_versions
       (version_id, package_key, version_name, version_uri, summary, description_format, description,
@@ -2017,6 +2015,12 @@ as
 		   release_date, vendor, vendor_uri, auto_mount
 	    from apm_package_versions
 	    where version_id = copy.version_id;
+
+        update acs_objects
+        set title = (select v.package_key || ', Version ' || v.version_name
+                     from apm_package_versions v
+                     where v.version_id = copy.version_id)
+        where object_id = copy.version_id;
     
 	insert into apm_package_dependencies(dependency_id, version_id, dependency_type, service_uri, service_version)
 	    select acs_object_id_seq.nextval, v_version_id, dependency_type, service_uri, service_version
@@ -2074,7 +2078,7 @@ as
          else 
 	   v_version_id := edit.version_id;			
        end if;
-       
+
        update apm_package_versions 
 		set version_uri = edit.version_uri,
 		summary = edit.summary,

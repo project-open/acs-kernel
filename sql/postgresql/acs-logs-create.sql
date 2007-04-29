@@ -3,7 +3,7 @@
 --
 -- @author rhs@mit.edu
 -- @creation-date 2000-10-02
--- @cvs-id acs-logs-create.sql,v 1.6 2000/11/02 17:55:49 yon Exp
+-- @cvs-id $Id$
 --
 
 create sequence t_acs_log_id_seq;
@@ -12,7 +12,7 @@ select nextval('t_acs_log_id_seq') as nextval;
 
 create table acs_logs (
 	log_id		integer
-			constraint acs_logs_pk
+			constraint acs_logs_log_id_pk
 			primary key,
 	log_date	timestamptz default current_timestamp not null,
 	log_level	varchar(20) not null

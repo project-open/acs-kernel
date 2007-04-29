@@ -3,7 +3,7 @@
 --
 -- @author rhs@mit.edu
 -- @creation-date 2000-09-05
--- @cvs-id site-nodes-create.sql,v 1.6.2.2 2001/01/12 22:53:32 dennis Exp
+-- @cvs-id $Id$
 --
 
 create or replace function inline_0 ()
@@ -235,7 +235,10 @@ begin
       now(),
       new__creation_user,
       new__creation_ip,
-      null
+      null,
+      ''t'',
+      new__name,
+      new__object_id
     );
 
     insert into site_nodes

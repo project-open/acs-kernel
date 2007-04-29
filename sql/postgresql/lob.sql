@@ -19,7 +19,8 @@
 create sequence lob_sequence;
 
 create table lobs (
-	lob_id			integer not null primary key,
+	lob_id			integer not null 
+                            constraint lobs_lob_id_pk primary key,
 	refcount		integer not null default 0
 );
 
@@ -33,11 +34,14 @@ create trigger lobs_delete_trig before delete on lobs
 for each row execute procedure on_lobs_delete();
 
 create table lob_data (
-	lob_id			integer not null references lobs,
-	segment			integer not null,
-	byte_len		integer not null,
-	data			bytea not null,
-	primary key (lob_id, segment)
+        lob_id              integer not null
+                            constraint lob_data_lob_id_fk
+                            references lobs on delete cascade,
+        segment             integer not null,
+        byte_len            integer not null,
+        data                bytea not null,
+        constraint lob_data_lob_id_segment_pk
+        primary key (lob_id, segment)
 );
 
 create index lob_data_index on lob_data(lob_id);
@@ -87,9 +91,10 @@ declare
         v_rec   record;
         v_data  text default '''';
 begin
-        for v_rec in select data, segment from lob_data where lob_id = p_lob_id order by segment;
+        for v_rec in select data, segment from lob_data where lob_id = p_lob_id order by segment 
+        loop
             v_data := v_data || v_rec.data;
-        end if;
+        end loop;
 
         return v_data;
 

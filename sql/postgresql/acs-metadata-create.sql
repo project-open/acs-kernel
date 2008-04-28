@@ -516,56 +516,61 @@ where attr.object_type = all_types.ancestor_type;
 -- METADATA PACKAGES --
 -----------------------
 
-create function acs_object_type__create_type (varchar,varchar,varchar,varchar,varchar,varchar,varchar,boolean,varchar,varchar)
-returns integer as '
+create function acs_object_type__create_type (
+	varchar, varchar, varchar, varchar, varchar,
+	varchar, varchar, boolean, varchar, varchar
+) returns integer as '
 declare
-  create_type__object_type            alias for $1;  
-  create_type__pretty_name            alias for $2;  
-  create_type__pretty_plural          alias for $3;  
-  create_type__supertype              alias for $4;  
-  create_type__table_name             alias for $5;  
-  create_type__id_column              alias for $6;  -- default ''XXX''
-  create_type__package_name           alias for $7;  -- default null
-  create_type__abstract_p             alias for $8;  -- default ''f''
-  create_type__type_extension_table   alias for $9;  -- default null
-  create_type__name_method            alias for $10; -- default null
-  v_package_name acs_object_types.package_name%TYPE;
-  v_supertype						  acs_object_types.supertype%TYPE;
-  v_name_method                       varchar;
-  v_idx                               integer;
+	create_type__object_type		alias for $1;	
+	create_type__pretty_name		alias for $2;	
+	create_type__pretty_plural		alias for $3;	
+	create_type__supertype			alias for $4;	
+	create_type__table_name			alias for $5;	
+	create_type__id_column			alias for $6;	-- default ''XXX''
+	create_type__package_name		alias for $7;	-- default null
+	create_type__abstract_p			alias for $8;	-- default ''f''
+	create_type__type_extension_table	alias for $9;	-- default null
+	create_type__name_method		alias for $10;	-- default null
+	v_package_name				acs_object_types.package_name%TYPE;
+	v_supertype				acs_object_types.supertype%TYPE;
+	v_name_method				varchar;
+	v_idx					integer;
+	v_count					integer;
 begin
-    v_idx := position(''.'' in create_type__name_method);
-    if v_idx <> 0 then
-         v_name_method := substr(create_type__name_method,1,v_idx - 1) || 
-                       ''__'' || substr(create_type__name_method, v_idx + 1);
-    else 
-         v_name_method := create_type__name_method;
-    end if;
+	select count(*) into v_count from acs_object_types
+	where object_type = create_type__object_type;
+	if v_count > 0 then return 0; end if;
 
-    if create_type__package_name is null or create_type__package_name = '''' then
-      v_package_name := create_type__object_type;
-    else
-      v_package_name := create_type__package_name;
-    end if;
-
-	if create_type__supertype is null or create_type__supertype = '''' then
-	  v_supertype := ''acs_object'';
-	else
-	  v_supertype := create_type__supertype;
+	v_idx := position(''.'' in create_type__name_method);
+	if v_idx <> 0 then
+		 v_name_method := substr(create_type__name_method,1,v_idx - 1) || 
+			 ''__'' || substr(create_type__name_method, v_idx + 1);
+	else 	 v_name_method := create_type__name_method;
 	end if;
 
-    insert into acs_object_types
-      (object_type, pretty_name, pretty_plural, supertype, table_name,
-       id_column, abstract_p, type_extension_table, package_name,
-       name_method)
-    values
-      (create_type__object_type, create_type__pretty_name, 
-       create_type__pretty_plural, v_supertype, 
-       create_type__table_name, create_type__id_column, 
-       create_type__abstract_p, create_type__type_extension_table, 
-       v_package_name, v_name_method);
+	if create_type__package_name is null or create_type__package_name = '''' then
+		v_package_name := create_type__object_type;
+	else	v_package_name := create_type__package_name;
+	end if;
 
-    return 0; 
+	if create_type__supertype is null or create_type__supertype = '''' then
+		v_supertype := ''acs_object'';
+	else	v_supertype := create_type__supertype;
+	end if;
+
+	insert into acs_object_types (
+		object_type, pretty_name, pretty_plural, supertype, table_name,
+		 id_column, abstract_p, type_extension_table, package_name,
+		 name_method
+	) values (
+		create_type__object_type, create_type__pretty_name, 
+		 create_type__pretty_plural, v_supertype, 
+		 create_type__table_name, create_type__id_column, 
+		 create_type__abstract_p, create_type__type_extension_table, 
+		 v_package_name, v_name_method
+	);
+
+	return 0; 
 end;' language 'plpgsql';
 
 

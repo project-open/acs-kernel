@@ -2,7 +2,26 @@
 -- Application Data Links --
 ----------------------------
 
-create sequence acs_data_links_seq start with 1;
+
+create or replace function inline_0 ()
+returns integer as $body$
+declare
+        v_count  integer;
+begin
+        select count(*) into v_count from
+	pg_class where lower(relname) = 'acs_data_links_seq';
+
+        IF v_count = 0 THEN
+		create sequence acs_data_links_seq start with 1;
+		return 0;
+        END IF;
+
+        return 1;
+end;$body$ language 'plpgsql';
+select inline_0 ();
+drop function inline_0 ();
+
+
 
 create table acs_data_links (
         rel_id          integer not null

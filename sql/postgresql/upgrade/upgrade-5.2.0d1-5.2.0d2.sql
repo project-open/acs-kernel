@@ -19,12 +19,7 @@ create function inline_0 ()
 returns integer as '
 declare
  attr_id acs_attributes.attribute_id%TYPE;
- v_exists_p 		integer;
 begin
- select count(*) into v_exists_p
- from acs_attributes
- where object_type = ''acs_object'' and attribute_name = ''package_id'';
- IF 0 = v_exists_p THEN
  attr_id := acs_attribute__create_attribute (
 	''acs_object'',
 	''package_id'',
@@ -40,12 +35,7 @@ begin
 	''type_specific'',
 	''f''
 	);
- END IF;
 
- select count(*) into v_exists_p
- from acs_attributes
- where object_type = ''acs_object'' and attribute_name = ''title'';
- IF 0 = v_exists_p THEN
  attr_id := acs_attribute__create_attribute (
 	''acs_object'',
 	''title'',
@@ -61,7 +51,7 @@ begin
 	''type_specific'',
 	''f''
 	);
-  END IF;
+
   return 0;
 end;' language 'plpgsql';
 
@@ -134,14 +124,12 @@ set title = (select name
                   where node_id = acs_objects.object_id)
 where object_type = 'site_node';
 
--- fraber 120212: Fixed issue with some updates
 update acs_objects
 set title = (select instance_name
              from apm_packages
              where package_id = object_id),
     package_id = object_id
-where object_type in ('apm_package','apm_application','apm_service') and
-      object_id in (select package_id from apm_packages);
+where object_type in ('apm_package','apm_application','apm_service');
 
 update acs_objects
 set title = (select package_key || ', Version ' || version_name

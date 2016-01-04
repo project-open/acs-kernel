@@ -4,6 +4,7 @@ ALTER TABLE acs_objects drop column max_child_sortkey cascade;
 DROP TRIGGER acs_objects_insert_tr on acs_objects;
 DROP TRIGGER acs_objects_update_tr on acs_objects;
 
+
 -- 
 -- procedure content_type__refresh_view/1
 -- 
@@ -131,10 +132,116 @@ $$ LANGUAGE plpgsql;
 
 -- fraber 160104: Disable execution. Execute as part of acs-content-repository upgrade.
 --
--- SELECT t2.object_type, content_type__refresh_view(t2.object_type)
--- from acs_object_types t1, acs_object_types t2
--- where t2.tree_sortkey between t1.tree_sortkey and
--- tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
+SELECT t2.object_type, content_type__refresh_view(t2.object_type)
+from acs_object_types t1, acs_object_types t2
+where t2.tree_sortkey between t1.tree_sortkey and
+tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
+
+-- select content_type__refresh_view(
+
+
+
+
+
+
+-- fraber 160104: Regenerated objects dropped by drop-cascade above
+--
+
+
+drop view if exists file_storage_objectx;
+CREATE VIEW file_storage_objectx AS
+SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, 
+       acs_objects.package_id AS object_package_id, 
+       acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
+       acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, 
+       cr.revision_id, cr.title, cr.item_id, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, 
+       i.name, i.parent_id 
+FROM acs_objects, cr_revisions cr, cr_items i, cr_text 
+WHERE ((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id));
+
+
+select content_type__refresh_view('file_storage_object');
+
+
+create view file_storage_objectxi as 
+select	-- acs_objects.object_id, acs_objects.object_type, acs_objects.title as object_title, acs_objects.package_id as object_package_id,
+	-- acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date,
+	-- acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip,
+	-- cr.revision_id, cr.title, cr.item_id,  
+	content_revision__get_content(cr.revision_id) as data,
+	cr_text.text_data as text, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, 
+	file_storage_objectx.* 
+from	acs_objects, cr_revisions cr, cr_text, file_storage_objectx 
+where	acs_objects.object_id = cr.revision_id  and acs_objects.object_id = file_storage_objectx.object_id;
+
+
+
+
+drop view if exists cr_revisionsx;
+CREATE VIEW cr_revisionsx AS
+SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
+       acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
+       acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, 
+       cr.revision_id, cr.title, cr.item_id, cr.description, 
+       cr.publish_date, cr.mime_type, cr.nls_language, i.name, i.parent_id 
+FROM acs_objects, cr_revisions cr, cr_items i, cr_text 
+WHERE ((acs_objects.object_id = cr.revision_id) 
+      AND (cr.item_id = i.item_id));
+
+
+drop view if exists etp_page_revisionsx;
+CREATE VIEW etp_page_revisionsx AS
+SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
+       acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
+       acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, 
+       cr.revision_id, cr.title, cr.item_id, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, 
+       i.name, i.parent_id, etp_page_revisions.etp_page_revision_id 
+FROM acs_objects, cr_revisions cr, cr_items i, cr_text, etp_page_revisions 
+WHERE (((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id)) AND 
+      (acs_objects.object_id = etp_page_revisions.etp_page_revision_id));
+
+
+CREATE VIEW imagesx AS
+SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
+       acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
+       acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, 
+       cr.revision_id, cr.title, cr.item_id, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, i.name, 
+       i.parent_id, images.image_id, images.width, images.height 
+FROM acs_objects, cr_revisions cr, cr_items i, cr_text, 
+       images 
+WHERE (((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id)) AND 
+      (acs_objects.object_id = images.image_id));
+
+CREATE VIEW users_email_imagex AS
+SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
+       acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
+       acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, cr.revision_id, 
+       cr.title, cr.item_id, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, i.name, i.parent_id, 
+       users_email_image.email_image_id 
+FROM acs_objects, cr_revisions cr, cr_items i, cr_text, users_email_image 
+WHERE (((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id)) AND 
+      (acs_objects.object_id = users_email_image.email_image_id));
+
+CREATE VIEW fs_urls_full AS
+SELECT cr_extlinks.extlink_id AS url_id, cr_extlinks.url, cr_items.parent_id AS folder_id, cr_extlinks.label AS name, 
+       cr_extlinks.description, acs_objects.object_id, acs_objects.object_type, acs_objects.context_id, 
+       acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, acs_objects.creation_ip, 
+       acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, acs_objects.title, acs_objects.package_id 
+FROM cr_extlinks, cr_items, acs_objects 
+WHERE ((cr_extlinks.extlink_id = cr_items.item_id) AND 
+      (cr_items.item_id = acs_objects.object_id));
+
+CREATE VIEW workflow_case_log_revx AS
+SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
+       acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
+       acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, cr.revision_id, 
+       cr.title, cr.item_id, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, i.name, i.parent_id, 
+       workflow_case_log_rev.entry_rev_id 
+FROM acs_objects, cr_revisions cr, cr_items i, cr_text, workflow_case_log_rev 
+WHERE (((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id)) AND 
+      (acs_objects.object_id = workflow_case_log_rev.entry_rev_id));
+
+
 
 
 -- 
@@ -161,10 +268,8 @@ create function inline_0()
 returns integer as $inline_0$
 declare success integer;
 begin
-
   -- We know we have to update when we have one of the tables of the
   -- file-storage package.
-
   select 1 from pg_class into success where relname = 'fs_folders';
   IF found THEN 
      create or replace view fs_urls_full as
@@ -199,17 +304,13 @@ create function inline_0()
 returns integer as $inline_0$
 declare success integer;
 begin
-
-  --
   -- We know we have to update the view when we have one of the base tables.
-  --
   select 1 from pg_class into success where relname = 'download_repository';
   IF found THEN 
-
      -- If the upgrade script is run multiple times, then
      --   "ALTER TABLE acs_objects drop column ..."
      -- might not have dropped the view. So we do this manually.
-     
+    
      select 1 from pg_class into success where relname = 'download_repository_obj';
      IF found THEN
         drop view download_repository_obj;

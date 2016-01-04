@@ -129,18 +129,20 @@ $$ LANGUAGE plpgsql;
 -- fields.
 --
 
-
-SELECT t2.object_type, content_type__refresh_view(t2.object_type)
-from acs_object_types t1, acs_object_types t2
-where t2.tree_sortkey between t1.tree_sortkey and
-tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
+-- fraber 160104: Disable execution. Execute as part of acs-content-repository upgrade.
+--
+-- SELECT t2.object_type, content_type__refresh_view(t2.object_type)
+-- from acs_object_types t1, acs_object_types t2
+-- where t2.tree_sortkey between t1.tree_sortkey and
+-- tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
 
 
 -- 
 -- we have to recreate cc_users, since it exports o.*
 -- 
+-- fraber 160104: persons has additional .title field in ]po[...
 create or replace view cc_users as
-select o.*, pa.*, pe.*, u.*, mr.member_state, mr.rel_id
+select o.*, pa.*, pe.person_id, pe.first_names, pe.last_name, u.*, mr.member_state, mr.rel_id
 from acs_objects o, parties pa, persons pe, users u, group_member_map m, membership_rels mr
 where o.object_id = pa.party_id
   and pa.party_id = pe.person_id

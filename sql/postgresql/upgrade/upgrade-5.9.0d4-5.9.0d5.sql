@@ -130,18 +130,6 @@ $$ LANGUAGE plpgsql;
 -- fields.
 --
 
--- fraber 160104: Disable execution. Execute as part of acs-content-repository upgrade.
---
-SELECT t2.object_type, content_type__refresh_view(t2.object_type)
-from acs_object_types t1, acs_object_types t2
-where t2.tree_sortkey between t1.tree_sortkey and
-tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
-
--- select content_type__refresh_view(
-
-
-
-
 
 
 -- fraber 160104: Regenerated objects dropped by drop-cascade above
@@ -259,6 +247,24 @@ where o.object_id = pa.party_id
   and m.rel_id = mr.rel_id
   and m.container_id = m.group_id
   and m.rel_type = 'membership_rel';
+
+
+
+
+
+
+
+
+-- fraber 160104: Disable execution. Execute as part of acs-content-repository upgrade.
+--
+SELECT t2.object_type, content_type__refresh_view(t2.object_type)
+from acs_object_types t1, acs_object_types t2
+where t2.tree_sortkey between t1.tree_sortkey and
+tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
+
+
+
+
 
 -- 
 -- we have to recreate fs_urls_full, when file-storage is in use,

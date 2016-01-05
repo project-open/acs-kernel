@@ -136,35 +136,6 @@ $$ LANGUAGE plpgsql;
 --
 
 
-drop view if exists file_storage_objectx;
-CREATE VIEW file_storage_objectx AS
-SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, 
-       acs_objects.package_id AS object_package_id, 
-       acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
-       acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip, 
-       cr.revision_id, cr.title, cr.item_id, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, 
-       i.name, i.parent_id 
-FROM acs_objects, cr_revisions cr, cr_items i, cr_text 
-WHERE ((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id));
-
-
-select content_type__refresh_view('file_storage_object');
-
-
-create view file_storage_objectxi as 
-select	-- acs_objects.object_id, acs_objects.object_type, acs_objects.title as object_title, acs_objects.package_id as object_package_id,
-	-- acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date,
-	-- acs_objects.creation_ip, acs_objects.last_modified, acs_objects.modifying_user, acs_objects.modifying_ip,
-	-- cr.revision_id, cr.title, cr.item_id,  
-	content_revision__get_content(cr.revision_id) as data,
-	cr_text.text_data as text, cr.description, cr.publish_date, cr.mime_type, cr.nls_language, 
-	file_storage_objectx.* 
-from	acs_objects, cr_revisions cr, cr_text, file_storage_objectx 
-where	acs_objects.object_id = cr.revision_id  and acs_objects.object_id = file_storage_objectx.object_id;
-
-
-
-
 drop view if exists cr_revisionsx;
 CREATE VIEW cr_revisionsx AS
 SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
@@ -261,7 +232,6 @@ SELECT t2.object_type, content_type__refresh_view(t2.object_type)
 from acs_object_types t1, acs_object_types t2
 where t2.tree_sortkey between t1.tree_sortkey and
 tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
-
 
 
 

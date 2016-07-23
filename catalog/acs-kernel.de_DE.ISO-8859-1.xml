@@ -10,9 +10,9 @@
   <msg key="common_actions">Aktionen</msg>
   <msg key="common_Add">Hinzufügen</msg>
   <msg key="common_add">Hinzufügen</msg>
-  <msg key="common_Admin">Administration</msg>
-  <msg key="common_Administration">Administration</msg>
-  <msg key="common_administration">Verwaltung</msg>
+  <msg key="common_Admin">Admin</msg>
+  <msg key="common_Administration">Admin</msg>
+  <msg key="common_administration">Admin</msg>
   <msg key="common_All">allen</msg>
   <msg key="common_Any">einigen</msg>
   <msg key="common_Apply">Übernehmen</msg>
@@ -99,7 +99,7 @@
   <msg key="Last_Name">Nachname</msg>
   <msg key="Last_Names">Nachnamen</msg>
   <msg key="lt_Administrator_Relatio">Administrator Beziehung</msg>
-  <msg key="lt_Administrator_Relatio_1">Beziehungen Administration</msg>
+  <msg key="lt_Administrator_Relatio_1">Admin Beziehungen</msg>
   <msg key="lt_Main_Site_Administrat">Administratoren der Hauptsite (main site)</msg>
   <msg key="lt_Membership_Relationsh">Beziehungen Mitgliedschaft</msg>
   <msg key="lt_Relational_Constraint">Relationale Beschränkung</msg>

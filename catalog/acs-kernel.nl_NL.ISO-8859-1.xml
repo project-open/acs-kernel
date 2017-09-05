@@ -94,6 +94,7 @@
   <msg key="First_Names">Voornamen</msg>
   <msg key="Group">Groep</msg>
   <msg key="Group_name">Groepnaam</msg>
+  <msg key="Group_names">Group Names</msg>
   <msg key="Groups">Groepen</msg>
   <msg key="Last_Name">Achternaam</msg>
   <msg key="Last_Names">Achternaam</msg>
@@ -118,6 +119,8 @@
   <msg key="member_state_banned">Uitgesloten</msg>
   <msg key="member_state_Deleted">Verwijderd</msg>
   <msg key="member_state_deleted">verwijderd</msg>
+  <msg key="member_state_Merged">Merged</msg>
+  <msg key="member_state_merged">merged</msg>
   <msg key="member_state_Needs_Approval">Toestemming nodig</msg>
   <msg key="member_state_needs_approval">Toestemming nodig</msg>
   <msg key="member_state_Rejected">Afgewezen</msg>
@@ -137,8 +140,10 @@
   <msg key="Unregistered">Ongeregistreerd</msg>
   <msg key="Unregistered_Visitor">Ongeregistreerde gebruiker</msg>
   <msg key="URL">URL</msg>
+  <msg key="URLs">URLs</msg>
   <msg key="User">Gebruiker</msg>
   <msg key="Username">Gebruikersnaam</msg>
   <msg key="Usernames">Gebruikersnaam</msg>
+  <msg key="Users">Users</msg>
   <msg key="Visitor">Bezoeker</msg>
 </message_catalog>

@@ -38,8 +38,8 @@
   <msg key="common_display">anzeigen</msg>
   <msg key="common_Edit">Bearbeiten</msg>
   <msg key="common_edit">Bearbeiten</msg>
-  <msg key="common_Finish">Fertigstellen</msg>
-  <msg key="common_finish">Fertigstellen</msg>
+  <msg key="common_Finish">Fertig stellen</msg>
+  <msg key="common_finish">Fertig stellen</msg>
   <msg key="common_First">Erste</msg>
   <msg key="common_first">Erste</msg>
   <msg key="common_Go">Los</msg>
@@ -88,9 +88,9 @@
   <msg key="common_view">Anzeigen</msg>
   <msg key="common_Yes">Ja</msg>
   <msg key="common_yes">Ja</msg>
-  <msg key="Default_Context">Standard-Kontext</msg>
-  <msg key="Email_Address">E-Mail-Addresse</msg>
-  <msg key="Email_Addresses">E-Mail-Adresse</msg>
+  <msg key="Default_Context">Standardkontext</msg>
+  <msg key="Email_Address">e-Mail Addresse</msg>
+  <msg key="Email_Addresses">Email Adresse</msg>
   <msg key="First_Names">Vorname</msg>
   <msg key="Group">Gruppe</msg>
   <msg key="Group_name">Gruppenname</msg>
@@ -99,9 +99,9 @@
   <msg key="Last_Name">Nachname</msg>
   <msg key="Last_Names">Nachnamen</msg>
   <msg key="lt_Administrator_Relatio">Administrator Beziehung</msg>
-  <msg key="lt_Administrator_Relatio_1">Administrator Beziehungen</msg>
+  <msg key="lt_Administrator_Relatio_1">Admin Beziehungen</msg>
   <msg key="lt_Main_Site_Administrat">Administratoren der Hauptsite (main site)</msg>
-  <msg key="lt_Membership_Relationsh">Mitgliedsbeziehungem</msg>
+  <msg key="lt_Membership_Relationsh">Beziehungen Mitgliedschaft</msg>
   <msg key="lt_Relational_Constraint">Relationale Beschränkung</msg>
   <msg key="lt_Relational_Constraint_1">Relationale Beschränkung</msg>
   <msg key="lt_Relational_Party_Segm">Relational Party Segment</msg>

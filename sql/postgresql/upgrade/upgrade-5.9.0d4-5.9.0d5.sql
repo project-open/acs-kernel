@@ -1,9 +1,8 @@
-ALTER TABLE acs_objects drop column tree_sortkey cascade;
-ALTER TABLE acs_objects drop column max_child_sortkey cascade;
+ALTER TABLE acs_objects drop column IF EXISTS tree_sortkey cascade;
+ALTER TABLE acs_objects drop column IF EXISTS max_child_sortkey cascade;
 
-DROP TRIGGER acs_objects_insert_tr on acs_objects;
-DROP TRIGGER acs_objects_update_tr on acs_objects;
-
+DROP TRIGGER IF EXISTS acs_objects_insert_tr on acs_objects;
+DROP TRIGGER IF EXISTS acs_objects_update_tr on acs_objects;
 
 -- 
 -- procedure content_type__refresh_view/1
@@ -126,7 +125,7 @@ $$ LANGUAGE plpgsql;
 -- (sometimes implicitely, e.g. via acs_objects.*) the
 -- tree_sortkey. We perform this operation here (since the views were
 -- dropped by this upgrade script) but as well in update scripts for
--- the relevant packages refering explicitly to the tree_sortkey
+-- the relevant packages referring explicitly to the tree_sortkey
 -- fields.
 --
 
@@ -228,12 +227,12 @@ where o.object_id = pa.party_id
 
 -- fraber 160104: Disable execution. Execute as part of acs-content-repository upgrade.
 --
+
+
 SELECT t2.object_type, content_type__refresh_view(t2.object_type)
 from acs_object_types t1, acs_object_types t2
 where t2.tree_sortkey between t1.tree_sortkey and
 tree_right(t1.tree_sortkey) and t1.object_type = 'content_revision';
-
-
 
 
 -- 
@@ -280,13 +279,17 @@ create function inline_0()
 returns integer as $inline_0$
 declare success integer;
 begin
+
+  --
   -- We know we have to update the view when we have one of the base tables.
+  --
   select 1 from pg_class into success where relname = 'download_repository';
   IF found THEN 
+
      -- If the upgrade script is run multiple times, then
      --   "ALTER TABLE acs_objects drop column ..."
      -- might not have dropped the view. So we do this manually.
-    
+     
      select 1 from pg_class into success where relname = 'download_repository_obj';
      IF found THEN
         drop view download_repository_obj;
@@ -341,6 +344,6 @@ drop function inline_0();
 --    drop trigger acs_objects_insert_tr on acs_objects;
 --    drop trigger acs_objects_update_tr on acs_objects;
 
-drop function acs_objects_get_tree_sortkey(integer);
-drop function acs_objects_insert_tr();
-drop function acs_objects_update_tr();
+drop function IF EXISTS acs_objects_get_tree_sortkey(integer);
+drop function IF EXISTS acs_objects_insert_tr();
+drop function IF EXISTS acs_objects_update_tr();

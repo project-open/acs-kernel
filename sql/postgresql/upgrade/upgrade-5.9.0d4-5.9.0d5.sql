@@ -159,6 +159,7 @@ WHERE (((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id)) A
       (acs_objects.object_id = etp_page_revisions.etp_page_revision_id));
 
 
+drop view if exists imagesx;
 CREATE VIEW imagesx AS
 SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
        acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
@@ -170,6 +171,7 @@ FROM acs_objects, cr_revisions cr, cr_items i, cr_text,
 WHERE (((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id)) AND 
       (acs_objects.object_id = images.image_id));
 
+drop view if exists users_email_imagex;
 CREATE VIEW users_email_imagex AS
 SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
        acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 
@@ -180,6 +182,7 @@ FROM acs_objects, cr_revisions cr, cr_items i, cr_text, users_email_image
 WHERE (((acs_objects.object_id = cr.revision_id) AND (cr.item_id = i.item_id)) AND 
       (acs_objects.object_id = users_email_image.email_image_id));
 
+drop view if exists fs_urls_full;
 CREATE VIEW fs_urls_full AS
 SELECT cr_extlinks.extlink_id AS url_id, cr_extlinks.url, cr_items.parent_id AS folder_id, cr_extlinks.label AS name, 
        cr_extlinks.description, acs_objects.object_id, acs_objects.object_type, acs_objects.context_id, 
@@ -189,6 +192,7 @@ FROM cr_extlinks, cr_items, acs_objects
 WHERE ((cr_extlinks.extlink_id = cr_items.item_id) AND 
       (cr_items.item_id = acs_objects.object_id));
 
+drop view if exists workflow_case_log_revx;
 CREATE VIEW workflow_case_log_revx AS
 SELECT acs_objects.object_id, acs_objects.object_type, acs_objects.title AS object_title, acs_objects.package_id AS object_package_id, 
        acs_objects.context_id, acs_objects.security_inherit_p, acs_objects.creation_user, acs_objects.creation_date, 

@@ -482,13 +482,11 @@ CREATE OR REPLACE FUNCTION tree_ancestor_key(
    p_tree_key varbit,
    p_level integer
 ) RETURNS varbit AS $$
--- Returns a key for the ancestor at the given level.  The root is level
--- one.
+-- Returns a key for the ancestor at the given level.  The root is level one.
 DECLARE
   v_level         integer default 0;
   v_pos           integer default 1;
 BEGIN
-
   if tree_level(p_tree_key) < p_level then
     raise exception 'tree_ancestor_key: key is at a level less than %', p_level;
   end if;
@@ -519,13 +517,11 @@ CREATE OR REPLACE FUNCTION tree_root_key(
 -- given tree_sortkey.
 DECLARE
 BEGIN
-
   if substring(p_tree_key, 1, 1) = '1' then
       return substring(p_tree_key, 1, 32);
   else
       return substring(p_tree_key, 1, 8);
   end if;
-
 END;
 $$ LANGUAGE plpgsql immutable strict;
 
@@ -543,7 +539,6 @@ DECLARE
   v_leaf_pos      integer default 1;
   v_pos           integer default 1;
 BEGIN
-
   -- Find the leaf key first
   while v_pos < length(p_tree_key) loop
     v_leaf_pos := v_pos;
@@ -669,9 +664,7 @@ CREATE OR REPLACE FUNCTION tree_level(
 DECLARE
   v_pos                integer;        
   v_level              integer;
-  
 BEGIN
-
   if p_tree_key is null then
     return 0;
   end if;
